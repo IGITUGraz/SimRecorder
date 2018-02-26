@@ -6,7 +6,7 @@ Installation
 
 .. code:: bash
 
-    pip install https://github.com/IGITUGraz/SimRecorder/archive/v0.9.1.zip
+    pip install https://github.com/IGITUGraz/SimRecorder/archive/v0.9.2.zip
 
 
 Usage

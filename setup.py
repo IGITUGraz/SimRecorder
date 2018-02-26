@@ -6,7 +6,7 @@ import re
 from setuptools import setup
 
 __author__ = "Anand Subramoney"
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 
 def get_requirements(filename):
