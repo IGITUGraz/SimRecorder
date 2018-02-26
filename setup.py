@@ -21,7 +21,6 @@ def get_requirements(filename):
             assert match_obj, "Cannot make sense of url {}".format(req)
             requirements[i] = "{req}=={ver}".format(req=match_obj.group(1), ver=match_obj.group(2))
             dependency_links.append(req)
-    print(requirements, dependency_links)
     return requirements, dependency_links
 
 
@@ -30,7 +29,7 @@ requirements, dependency_links = get_requirements('requirements.txt')
 setup(
     name="SimRecorder",
     version=__version__,
-    packages=find_packages(),
+    packages=('simrecorder',),
     author=__author__,
     author_email="anand@igi.tugraz.at",
     description="The Simulation Recorder is a library for recording data for scientific simulations.",
