@@ -1,7 +1,7 @@
 from rejson import Client, Path
 from rediscontroller import start_redis, stop_redis
 
-from . import REDIS_PORT
+REDIS_PORT = 65535
 
 
 class DataStore:
@@ -32,6 +32,7 @@ class InMemoryDataStore(DataStore):
     """
     Simple datastore that stores everything in memory
     """
+
     def __init__(self):
         self.data = {}
 
@@ -55,6 +56,7 @@ class RedisDataStore(DataStore):
     """
     A datastore that persists all data to redis with the provided parameters
     """
+
     def __init__(self, server_host, data_directory, custom_json_encoder_cls=None, custom_json_decoder_cls=None):
         # Either both are None or both are not
         assert not ((custom_json_encoder_cls is None) ^ (custom_json_decoder_cls is None))
