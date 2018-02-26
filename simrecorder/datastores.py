@@ -86,7 +86,8 @@ class RedisDataStore(DataStore):
         self.rj.jsonarrappend(key, Path.rootPath(), dict_obj)
 
     def get(self, key):
-        return self.rj.jsonget(key, Path.rootPath())
+        if self.rj.exists(key):
+            return self.rj.jsonget(key, Path.rootPath())
 
     def close(self):
         stop_redis(redis_host=self.server_host)
