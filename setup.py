@@ -3,9 +3,10 @@ This file installs the SimManager package.
 """
 import re
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
-from simrecorder import __version__, __author__
+__author__ = "Anand Subramoney"
+__version__ = "0.9.1"
 
 
 def get_requirements(filename):
