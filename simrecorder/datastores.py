@@ -1,4 +1,5 @@
 from rejson import Client, Path
+from rediscontroller import start_redis, stop_redis
 
 from . import REDIS_PORT
 
@@ -23,8 +24,14 @@ class DataStore:
     def get(self, key):
         pass
 
+    def close(self):
+        pass
+
 
 class InMemoryDataStore(DataStore):
+    """
+    Simple datastore that stores everything in memory
+    """
     def __init__(self):
         self.data = {}
 
@@ -45,15 +52,21 @@ class InMemoryDataStore(DataStore):
 
 
 class RedisDataStore(DataStore):
-    def __init__(self, server_host, custom_json_encoder_cls=None, custom_json_decoder_cls=None):
+    """
+    A datastore that persists all data to redis with the provided parameters
+    """
+    def __init__(self, server_host, data_directory, custom_json_encoder_cls=None, custom_json_decoder_cls=None):
         # Either both are None or both are not
         assert not ((custom_json_encoder_cls is None) ^ (custom_json_decoder_cls is None))
         self.custom_json_encoder_cls = custom_json_encoder_cls
         self.custom_json_decoder_cls = custom_json_decoder_cls
         self.server_host = server_host
+        self.data_directory = data_directory
         self.rj = None
 
     def connect(self):
+        start_redis(data_directory=self.data_directory)
+
         if self.custom_json_encoder_cls is not None and self.custom_json_decoder_cls is not None:
             self.rj = Client(host=self.server_host, port=REDIS_PORT, encoder=self.custom_json_encoder_cls(),
                              decoder=self.custom_json_decoder_cls(), decode_responses=True)
@@ -72,3 +85,6 @@ class RedisDataStore(DataStore):
 
     def get(self, key):
         return self.rj.jsonget(key, Path.rootPath())
+
+    def close(self):
+        stop_redis(redis_host=self.server_host)

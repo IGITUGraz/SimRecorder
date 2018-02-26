@@ -15,3 +15,7 @@ class Recorder:
             return datastore.get(key)
         else:
             return self.datastores[0].get(key)
+
+    def close(self):
+        for datastore in self.datastores:
+            datastore.close()
