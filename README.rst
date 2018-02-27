@@ -31,13 +31,16 @@ Usage
 
     ## Then in your simulation
     # This appends some_value to a list with key 'a'
-    recorder.record('a', some_value)
+    recorder.record('a', some_value1)
+    recorder.record('a', some_value2)
 
     ## After the simulation is done, retrieve the values
-    # This gives you a list of values your recorded
+    # This gives you a list of values your recorded [some_value1, some_value2]
     recorder.get('a')
-    # You can also re-intialize recorder with the same parameters in some other files and access the keys
+    # You can also re-intialize recorder with the same parameters in other scripts and access the keys
 
     ## After everything
     recorder.close()
 
+NOTE: All data (including primitive types) are stored as python pickles. If you directly access the data from redis, 
+you should unpickle the values you get back from redis.
