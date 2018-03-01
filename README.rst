@@ -8,6 +8,10 @@ Installation
 
     pip install https://github.com/IGITUGraz/SimRecorder/archive/master.zip
 
+Requirements
+++++++++++++
+
+All required packages (including redis) are installed through pip as dependencies of this package.
 
 Usage
 +++++
@@ -41,6 +45,3 @@ Usage
 
     ## After everything
     recorder.close()
-
-NOTE: All data (including primitive types) are stored as python pickles. If you directly access the data from redis, 
-you should unpickle the values you get back from redis.
