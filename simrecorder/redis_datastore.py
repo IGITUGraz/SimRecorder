@@ -1,62 +1,15 @@
 import pickle
-from enum import Enum
-
-import pyarrow
 import zlib
-from rediscontroller import start_redis, stop_redis, is_redis_running
-from rejson import Client, Path
+from enum import Enum
 from multiprocessing import Pool
 
+import pyarrow
+from rediscontroller import is_redis_running, start_redis, stop_redis
+from rejson import Client, Path
+
+from simrecorder.datastore import DataStore
+
 REDIS_PORT = 65535
-
-
-class DataStore:
-    """
-    Interface for datastore. Any DataStore implementation must inherit from this.
-    """
-
-    def connect(self):
-        return self
-
-    def store(self, key, dict_obj):
-        pass
-
-    def initarr(self, key):
-        pass
-
-    def append(self, key, dict_obj):
-        pass
-
-    def get(self, key):
-        pass
-
-    def close(self):
-        pass
-
-
-class InMemoryDataStore(DataStore):
-    """
-    Simple datastore that stores everything in memory
-    """
-
-    def __init__(self):
-        self.data = {}
-
-    def connect(self):
-        return self
-
-    def store(self, key, dict_obj):
-        self.data[key] = dict_obj
-
-    def initarr(self, key):
-        self.data[key] = []
-
-    def append(self, key, dict_obj):
-        self.data[key].append(dict_obj)
-
-    def get(self, key):
-        return self.data.get(key, [])
-
 
 Serialization = Enum('Serialization', ['PICKLE', 'PYARROW'])
 
@@ -66,8 +19,12 @@ class RedisDataStore(DataStore):
     A datastore that persists all data to redis with the provided parameters
     """
 
-    def __init__(self, server_host, data_directory, serialization=Serialization.PICKLE,
-                 use_multiprocess_deserialization=False, use_compression=True):
+    def __init__(self,
+                 server_host,
+                 data_directory,
+                 serialization=Serialization.PICKLE,
+                 use_multiprocess_deserialization=False,
+                 use_compression=True):
         # , custom_json_encoder_cls=None, custom_json_decoder_cls=None):
         # Either both are None or both are not
         # assert not ((custom_json_encoder_cls is None) ^ (custom_json_decoder_cls is None))
@@ -91,13 +48,16 @@ class RedisDataStore(DataStore):
 
         self.use_compression = use_compression
 
-        self.config = dict(server_host=server_host, data_directory=data_directory, serialization=str(serialization),
-                           use_multiprocess_deserialization=use_multiprocess_deserialization,
-                           use_compression=use_compression)
+        self.config = dict(
+            server_host=server_host,
+            data_directory=data_directory,
+            serialization=str(serialization),
+            use_multiprocess_deserialization=use_multiprocess_deserialization,
+            use_compression=use_compression)
 
     @staticmethod
     def _pickle_serialize(obj):
-        return pickle.dumps(obj)
+        return pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
 
     @staticmethod
     def _pickle_deserialize(bstring):
