@@ -1,5 +1,4 @@
 # Start redis dependencies
-rejson
 redis
 git+https://github.com/anandtrex/redis-installer.git@v1.0.2#egg=redis-installer-1.0.2
 pyarrow

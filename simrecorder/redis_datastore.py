@@ -1,20 +1,14 @@
-import pickle
-import lz4.frame
-from enum import Enum
-from multiprocessing import Pool
+import json
 
-import pyarrow
+import redis
+
 from rediscontroller import is_redis_running, start_redis, stop_redis
-from rejson import Client, Path
-
-from simrecorder.datastore import DataStore
+from simrecorder.datastore import DataStore, Serialization, SerializationMixin
 
 REDIS_PORT = 65535
 
-Serialization = Enum('Serialization', ['PICKLE', 'PYARROW'])
 
-
-class RedisDataStore(DataStore):
+class RedisDataStore(DataStore, SerializationMixin):
     """
     A datastore that persists all data to redis with the provided parameters
     """
@@ -55,39 +49,6 @@ class RedisDataStore(DataStore):
             use_multiprocess_deserialization=use_multiprocess_deserialization,
             use_compression=use_compression)
 
-    @staticmethod
-    def _pickle_serialize(obj):
-        return pickle.dumps(obj, protocol=pickle.HIGHEST_PROTOCOL)
-
-    @staticmethod
-    def _pickle_deserialize(bstring):
-        return pickle.loads(bstring)
-
-    @staticmethod
-    def _pyarrow_serialize(obj):
-        return pyarrow.serialize(obj).to_buffer().to_pybytes()
-
-    @staticmethod
-    def _pyarrow_deserialize(bstring):
-        return pyarrow.deserialize(pyarrow.frombuffer(bstring))
-
-    def _singleprocess_deserialize_list(self, results):
-        return [self._deserialize(self._decompress(r)) for r in results]
-
-    def _multiprocess_deserialize_list(self, results):
-        with Pool() as p:
-            return p.map(self._deserialize, p.map(self._decompress, results))
-
-    def _compress(self, bstring):
-        if self.use_compression:
-            return lz4.frame.compress(bstring)
-        return bstring
-
-    def _decompress(self, bstring):
-        if self.use_compression:
-            return lz4.frame.decompress(bstring)
-        return bstring
-
     def connect(self):
         if is_redis_running():
             raise RuntimeError(
@@ -99,22 +60,26 @@ class RedisDataStore(DataStore):
         #     self.rj = Client(host=self.server_host, port=REDIS_PORT, encoder=self.custom_json_encoder_cls(),
         #                      decoder=self.custom_json_decoder_cls())  # , decode_responses=True)
         # else:
-        self.rj = Client(host=self.server_host, port=REDIS_PORT)  # , decode_responses=True)
-        self.store('config', self.config)
+        self.rj = redis.StrictRedis(host=self.server_host, port=REDIS_PORT)    # , decode_responses=True)
+        self.set('config', self.config)
         return self
 
-    def store(self, key, dict_obj):
-        self.rj.jsonset(key, Path.rootPath(), dict_obj)
+    def set(self, key, dict_obj):
+        self.rj.set(key, json.dumps(dict_obj))
+
+    def get(self, key):
+        val = self.rj.get(key)
+        if val is not None:
+            return json.loads(val)
 
     def append(self, key, obj):
         serialized_obj = self._compress(self._serialize(obj))
         self.rj.rpush(key, serialized_obj)
 
-    def get(self, key):
+    def get_all(self, key):
         if self.rj.type(key) == b'list':
             results = self.rj.lrange(key, 0, -1)
             return self._deserialize_list(results)
-        # return self.rj.get(key)
 
     def close(self):
         stop_redis(redis_host=self.server_host)

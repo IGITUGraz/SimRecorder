@@ -1,6 +1,6 @@
 from .recorder import Recorder
-from .datastore import InMemoryDataStore
-from .redis_datastore import RedisDataStore, Serialization
+from .datastore import InMemoryDataStore, Serialization
+from .redis_datastore import RedisDataStore
 from .hdf_datastore import HDF5DataStore
 
 
