@@ -1,5 +1,5 @@
 import pickle
-import zlib
+import lz4.frame
 from enum import Enum
 from multiprocessing import Pool
 
@@ -80,12 +80,12 @@ class RedisDataStore(DataStore):
 
     def _compress(self, bstring):
         if self.use_compression:
-            return zlib.compress(bstring)
+            return lz4.frame.compress(bstring)
         return bstring
 
     def _decompress(self, bstring):
         if self.use_compression:
-            return zlib.decompress(bstring)
+            return lz4.frame.decompress(bstring)
         return bstring
 
     def connect(self):

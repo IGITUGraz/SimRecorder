@@ -3,6 +3,7 @@ rejson
 redis
 git+https://github.com/anandtrex/redis-installer.git@v1.0.2#egg=redis-installer-1.0.2
 pyarrow
+lz4
 # End redis dependencies
 # Start hdf5 dependencies
 h5py

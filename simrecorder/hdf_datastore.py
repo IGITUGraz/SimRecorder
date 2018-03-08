@@ -38,7 +38,12 @@ class HDF5DataStore(DataStore):
     def get(self, key):
         d = self.f.get(key)
         if d is not None:
-            return d.values()
+            # return d.values()
+            return list(
+                map(lambda x: x[1],
+                    sorted(d.items(), key=lambda x: int(x[0]))
+                    )
+            )
 
     def close(self):
         self.f.close()
