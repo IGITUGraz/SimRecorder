@@ -1,5 +1,8 @@
-Sim Recorder
-============
+SimRecorder
+===========
+
+SimRecorder is an interface for recording simulation data and optionally persisting it in a backed. Currently two
+different backends are supported -- `redis <https://redis.io>`_ and `hdf5 <https://support.hdfgroup.org/HDF5/>`_
 
 Installation
 ++++++++++++
@@ -11,37 +14,112 @@ Installation
 Requirements
 ++++++++++++
 
+Redis backend
+-------------
+
 All required packages (including redis) are installed through pip as dependencies of this package.
 
-Usage
-+++++
+HDF5 backend
+------------
+
+libhdf5 needs to be installed in the system using:
+
+.. code:: bash
+
+    sudo apt-get install libhdf5
+
+Quickstart
+++++++++++
+
+The library consists of a single `Recorder` interface that can be initialized to use different backends by passing in an
+appropriate `DataStore` object.
+
+First import the datastores you want to use
 
 .. code:: python
 
-    from simrecorder import Recorder, InMemoryDataStore, RedisDataStore
+    from simrecorder import Recorder, InMemoryDataStore, RedisDataStore, HDF5DataStore
 
-    ## First initialize all the datastores you want (Yes, you can have more than one!)
-    # The InMemoryDataStore stores all data in memory
+Then initialize all the datastores you want (Yes, you can have more than one!). 
+
+The `InMemoryDataStore` stores all data in memory
+
+.. code:: python
+
     in_memory_datastore = InMemoryDataStore()
 
-    # The RedisDataStore stores all data in redis
+The `RedisDataStore` stores all data in redis (persisted in the given data_directory). Currently, you cannot have more
+than one `RedisDatastore` being used per host.
+
+For distributed simulations, you need to pass in the appropriate `server_host` of the main/master node in the code for
+worker simulations running in the worker nodes/host.
+
+.. code:: python
+
     redis_datastore = RedisDataStore(server_host='localhost', data_directory='~/output')
+
+The `HDF5Datastore` stores all data in the given HDF5 file. If you use a file that already exists, it opens the file in
+read-only mode.
+
+This doesn't support distributed simulations yet, unless you have a single writer thread that handles all interaction
+with the hdf5 file.
+
+.. code:: python
+
+    hdf5_datastore = HDF5DataStore('~/output/data.h5')
+
+Then initialize the recorder with the datastore(s) you want to use 
+
+.. code:: python
 
     # To use only in-memory datastore
     recorder = Recorder(in_memory_datastore)
 
-    # To use both
-    recorder = Recorder(in_memory_datastore, redis_datastore)
+    # To use only the hdf5 datastore
+    recorder = Recorder(hdf5_datastore)
 
-    ## Then in your simulation
-    # This appends some_value to a list with key 'a'
-    recorder.record('a', some_value1)
-    recorder.record('a', some_value2)
+    # To use all
+    recorder = Recorder(in_memory_datastore, redis_datastore, hdf5_datastore)
 
-    ## After the simulation is done, retrieve the values
-    # This gives you a list of values your recorded [some_value1, some_value2]
+
+Then in your simulation, record the values you want. For each type of value, pass in a key. By default, every time you
+use the same key, the value is appended to a list-like datastructure (in the underlying datastore)
+
+Your keys can be any arbitrary string. Use '/' for efficient use of deeper hierarchies in HDF5 (For other datastores, it
+makes no difference)
+
+.. code:: python
+
+    # This appends some_value to a list with key 'a/b'
+    recorder.record('a/b', some_value1)
+    recorder.record('a/b', some_value2)
+    # This appends some_value to a list with key 'a/c'
+    recorder.record('a/c', some_value2)
+
+
+After the simulation is done, retrieve the values using `recorder.get`, which returns a list of values. Note that if you
+used the `HDF5Datastore`, you might get `HDFView` objects that you can either pass in directly to most numpy functions, 
+or convert it to numpy arrays first before use.
+
+You can also close the recorder after writing, and open it later for reading.
+
+.. code:: python
+
+    # This gives you a list of values your recorded [some_value1, some_value2] (Retrieved from the first datastore)
     recorder.get('a')
     # You can also re-intialize recorder with the same parameters in other scripts and access the keys
 
+
+Remember to close the recorder after all reading/writing is done. This flushes data and closes the connection (where
+applicable)
+
+.. code:: python
+
     ## After everything
     recorder.close()
+
+Backends
+++++++++
+
+* Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) numpy arrays
+* For storing large numpy arrays, use the HDF5 backend. Not that both writing and especially reading back can be much slower.
