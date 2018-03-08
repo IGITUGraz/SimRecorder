@@ -31,8 +31,8 @@ libhdf5 needs to be installed in the system using:
 Quickstart
 ++++++++++
 
-The library consists of a single `Recorder` interface that can be initialized to use different backends by passing in an
-appropriate `DataStore` object.
+The library consists of a single ``Recorder`` interface that can be initialized to use different backends by passing in an
+appropriate ``DataStore`` object.
 
 First import the datastores you want to use
 
@@ -42,23 +42,23 @@ First import the datastores you want to use
 
 Then initialize all the datastores you want (Yes, you can have more than one!). 
 
-The `InMemoryDataStore` stores all data in memory
+The ``InMemoryDataStore`` stores all data in memory
 
 .. code:: python
 
     in_memory_datastore = InMemoryDataStore()
 
-The `RedisDataStore` stores all data in redis (persisted in the given data_directory). Currently, you cannot have more
-than one `RedisDatastore` being used per host.
+The ``RedisDataStore`` stores all data in redis (persisted in the given data_directory). Currently, you cannot have more
+than one ``RedisDatastore`` being used per host.
 
-For distributed simulations, you need to pass in the appropriate `server_host` of the main/master node in the code for
+For distributed simulations, you need to pass in the appropriate ``server_host`` of the main/master node in the code for
 worker simulations running in the worker nodes/host.
 
 .. code:: python
 
     redis_datastore = RedisDataStore(server_host='localhost', data_directory='~/output')
 
-The `HDF5Datastore` stores all data in the given HDF5 file. If you use a file that already exists, it opens the file in
+The ``HDF5Datastore`` stores all data in the given HDF5 file. If you use a file that already exists, it opens the file in
 read-only mode.
 
 This doesn't support distributed simulations yet, unless you have a single writer thread that handles all interaction
@@ -97,9 +97,9 @@ makes no difference)
     recorder.record('a/c', some_value2)
 
 
-After the simulation is done, retrieve the values using `recorder.get`, which returns a list of values. Note that if you
-used the `HDF5Datastore`, you might get `HDFView` objects that you can either pass in directly to most numpy functions, 
-or convert it to numpy arrays first before use.
+After the simulation is done, retrieve the values using ``recorder.get``, which returns a list of values. Note that if you
+used the ``HDF5Datastore``, you might get ``HDFView`` objects that you can either pass in directly to most NumPy functions, 
+or convert it to NumPy arrays first before use.
 
 You can also close the recorder after writing, and open it later for reading.
 
@@ -121,5 +121,5 @@ applicable)
 Backends
 ++++++++
 
-* Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) numpy arrays
+* Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) NumPy arrays
 * For storing large numpy arrays, use the HDF5 backend. Not that both writing and especially reading back can be much slower.
