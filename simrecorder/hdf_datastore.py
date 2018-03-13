@@ -13,9 +13,9 @@ class HDF5DataStore(DataStore):
 
     def __init__(self, data_file_pth):
         if not os.path.exists(data_file_pth):
-            self.f = h5py.File(data_file_pth, 'w')
+            self.f = h5py.File(data_file_pth, 'w', libver='latest')
         else:
-            self.f = h5py.File(data_file_pth, 'r')
+            self.f = h5py.File(data_file_pth, 'r', libver='latest')
         self.i = 0
 
     def set(self, key, dict_obj):
@@ -29,8 +29,11 @@ class HDF5DataStore(DataStore):
         if isinstance(obj, np.ndarray):
             d = self.f.get(key)
             if d is not None:
+                assert isinstance(d, h5py.Dataset)
+                # https://stackoverflow.com/a/25656175
                 d.resize(d.shape[0]+1, axis=0)
                 d[-1:, ...] = obj
+                d.flush()
             else:
                 self.f.create_dataset(key, data=obj[None, ...], compression="lzf", maxshape=(None, *obj.shape))
         else:
@@ -51,3 +54,10 @@ class HDF5DataStore(DataStore):
 
     def close(self):
         self.f.close()
+
+    def enable_swmr(self):
+        """
+        This should be done only after all datasets have been created. You cannot add new groups after this is done.
+        :return:
+        """
+        self.f.swmr_mode = True

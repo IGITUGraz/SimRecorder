@@ -43,6 +43,8 @@ def main():
         array = arrays[i]
         with Timer() as st:
             recorder.record(key, array)
+        if i == 0:
+            hdf5_datastore.enable_swmr()
         print("Storing took %.2fs" % st.difftime)
     recorder.close()
     ## END WRITE
