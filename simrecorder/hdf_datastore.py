@@ -12,6 +12,10 @@ class HDF5DataStore(DataStore):
     """
 
     def __init__(self, data_file_pth):
+        assert h5py.version.hdf5_version_tuple >= (1,9,178), "SWMR requires HDF5 version >= 1.9.178 "
+        "If you have libhdf5 version >= 1.10 but get this error, try installing h5py from source"
+        "See: http://docs.h5py.org/en/latest/build.html#source-installation"
+
         if not os.path.exists(data_file_pth):
             self.f = h5py.File(data_file_pth, 'w', libver='latest')
         else:
