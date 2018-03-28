@@ -1,0 +1,6 @@
+# Start redis dependencies
+redis
+https://github.com/anandtrex/redis-installer/archive/master.zip
+pyarrow
+lz4
+# End redis dependencies

@@ -11,13 +11,16 @@ Installation
 
     pip install https://github.com/IGITUGraz/SimRecorder/archive/master.zip
 
+By default only support for HDF5 is installed. To install redis support, clone the repository and run
+
+.. code:: bash
+
+    pip install -r requirements.redis.txt && pip install .
+
+You can test if HDF5 and/or redis support was installed successfully by running the scripts in the ``tests`` directory.
+
 Requirements
 ++++++++++++
-
-Redis backend
--------------
-
-All required packages (including redis) are installed through pip as dependencies of this package.
 
 HDF5 backend
 ------------
@@ -27,6 +30,12 @@ libhdf5 needs to be installed in the system using:
 .. code:: bash
 
     sudo apt-get install libhdf5
+
+Redis backend
+-------------
+
+All required packages (including redis) are installed through pip as dependencies of this package.
+
 
 Quickstart
 ++++++++++
@@ -48,6 +57,16 @@ The ``InMemoryDataStore`` stores all data in memory
 
     in_memory_datastore = InMemoryDataStore()
 
+The ``HDF5Datastore`` stores all data in the given HDF5 file. If you use a file that already exists, it opens the file in
+read-only mode.
+
+.. code:: python
+
+    hdf5_datastore = HDF5DataStore('~/output/data.h5')
+
+The ``HDF5Datastore`` doesn't support distributed simulations yet, unless you have a single writer thread that handles all interaction
+with the hdf5 file.
+
 The ``RedisDataStore`` stores all data in redis (persisted in the given data_directory). Currently, you cannot have more
 than one ``RedisDatastore`` being used per host.
 
@@ -58,15 +77,6 @@ worker simulations running in the worker nodes/host.
 
     redis_datastore = RedisDataStore(server_host='localhost', data_directory='~/output')
 
-The ``HDF5Datastore`` stores all data in the given HDF5 file. If you use a file that already exists, it opens the file in
-read-only mode.
-
-This doesn't support distributed simulations yet, unless you have a single writer thread that handles all interaction
-with the hdf5 file.
-
-.. code:: python
-
-    hdf5_datastore = HDF5DataStore('~/output/data.h5')
 
 Then initialize the recorder with the datastore(s) you want to use 
 
@@ -99,9 +109,9 @@ makes no difference)
 
 After the simulation is done, retrieve the values using ``recorder.get``, which returns a list of values. Note that if you
 used the ``HDF5Datastore``, you might get ``HDFView`` objects that you can either pass in directly to most NumPy functions, 
-or convert it to NumPy arrays first before use.
+or convert it to NumPy arrays first before use. 
 
-You can also close the recorder after writing, and open it later for reading.
+The ``HDFView`` objects also allows you to work with larger-than-memory arrays, if you use only slices of the arrays.
 
 .. code:: python
 
@@ -109,6 +119,7 @@ You can also close the recorder after writing, and open it later for reading.
     recorder.get('a')
     # You can also re-intialize recorder with the same parameters in other scripts and access the keys
 
+You can also close the recorder after writing, and open it later for reading.
 
 Remember to close the recorder after all reading/writing is done. This flushes data and closes the connection (where
 applicable)
@@ -121,5 +132,5 @@ applicable)
 Backends
 ++++++++
 
+* For storing large numpy arrays, use the HDF5 backend. 
 * Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) NumPy arrays
-* For storing large numpy arrays, use the HDF5 backend. Not that both writing and especially reading back can be much slower.
