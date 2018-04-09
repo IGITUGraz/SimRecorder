@@ -48,7 +48,7 @@ class InMemoryDataStore(DataStore):
         return self.data.get(key)
 
     def append(self, key, dict_obj):
-        self.data[key].append(dict_obj)
+        self.data.setdefault(key, []).append(dict_obj)
 
     def get_all(self, key):
         return self.data.get(key, [])

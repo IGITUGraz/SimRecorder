@@ -129,6 +129,19 @@ applicable)
     ## After everything
     recorder.close()
 
+Tests
++++++
+
+To make sure all the datastores work, run::
+
+.. code:: bash
+
+    python tests/test_datastores.py
+
+To test the performance of the hdf5 and redis datastores, you can use the ``tests/time_*``. You can tune the size of 
+the numpy array to reflect your use case. The default values are quite large -- for instance with the default values,
+the resulting hdf5 file is about 4GB.
+
 Backends
 ++++++++
 
