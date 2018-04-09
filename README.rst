@@ -116,7 +116,7 @@ The ``HDFView`` objects also allows you to work with larger-than-memory arrays, 
 .. code:: python
 
     # This gives you a list of values your recorded [some_value1, some_value2] (Retrieved from the first datastore)
-    recorder.get('a')
+    recorder.get_all('a')
     # You can also re-intialize recorder with the same parameters in other scripts and access the keys
 
 You can also close the recorder after writing, and open it later for reading.
