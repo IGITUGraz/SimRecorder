@@ -132,7 +132,7 @@ applicable)
 Tests
 +++++
 
-To make sure all the datastores work, run::
+To make sure all the datastores work, run:
 
 .. code:: bash
 
