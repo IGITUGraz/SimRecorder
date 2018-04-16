@@ -1,9 +1,10 @@
 import json
 
 import redis
-
 from rediscontroller import is_redis_running, start_redis, stop_redis
-from simrecorder.datastore import DataStore, Serialization, SerializationMixin
+
+from simrecorder.datastore import DataStore
+from simrecorder.serialization import Serialization, SerializationMixin
 
 REDIS_PORT = 65535
 
