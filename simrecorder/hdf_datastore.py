@@ -28,6 +28,7 @@ class HDF5DataStore(DataStore):
             self.f = h5py_cache.File(data_file_pth, 'r', chunk_cache_mem_size=chunk_cache_mem_size_bytes,
                                      libver='latest')
         self.i = 0
+        self.is_swmr_hdf_version = h5py.version.hdf5_version_tuple >= (1, 9, 178)
 
     def set(self, key, dict_obj):
         for k, v in dict_obj.items():
@@ -44,7 +45,8 @@ class HDF5DataStore(DataStore):
                 # https://stackoverflow.com/a/25656175
                 d.resize(d.shape[0] + 1, axis=0)
                 d[-1:, ...] = obj
-                d.flush()
+                if self.is_swmr_hdf_version:
+                    d.flush()
             else:
                 self.f.create_dataset(key, data=obj[None, ...], compression="lzf", maxshape=(None, *obj.shape),
                                       chunks=self._get_chunk_size(obj))
@@ -105,7 +107,7 @@ class HDF5DataStore(DataStore):
         This should be done only after all datasets have been created. You cannot add new groups after this is done.
         :return:
         """
-        assert h5py.version.hdf5_version_tuple >= (1, 9, 178), "SWMR requires HDF5 version >= 1.9.178 "
+        assert self.is_swmr_hdf_version, "SWMR requires HDF5 version >= 1.9.178 "
         "If you have libhdf5 version >= 1.10 but get this error, try installing h5py from source"
         "See: http://docs.h5py.org/en/latest/build.html#source-installation"
         self.f.swmr_mode = True
