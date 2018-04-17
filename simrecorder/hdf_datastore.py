@@ -12,13 +12,14 @@ class HDF5DataStore(DataStore):
     This is a hd5 datastore. Currently, NOT threadsafe
     """
 
-    def __init__(self, data_file_pth, chunk_cache_mem_size_bytes=20 * 1024 ** 3, desired_chunk_size_bytes=1024 ** 2):
+    def __init__(self, data_file_pth, chunk_cache_mem_size_bytes=20 * 1024 ** 3, desired_chunk_size_bytes=0.1 * 1024 ** 2,
+            compression='lzf'):
         """
 
         :param data_file_pth: Path to the hdf5 file
         :param chunk_cache_mem_size_bytes: HDF5 chunk cache size. Larger the better. Default is 20GiB
         :param desired_chunk_size_bytes: Chunk size for individual chunks. h5py docs recommends keeping this between
-            10 KiB and 1 MiB. Default is 1 MiB. Pass in -1 to switch to h5py automagic chunk size.
+            10 KiB and 1 MiB. Default is 0.1 MiB. Pass in -1 to switch to h5py automagic chunk size.
         """
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
         if not os.path.exists(data_file_pth):
@@ -26,9 +27,13 @@ class HDF5DataStore(DataStore):
         else:
             # self.f = h5py.File(data_file_pth, 'r', libver='latest')
             self.f = h5py_cache.File(data_file_pth, 'r', chunk_cache_mem_size=chunk_cache_mem_size_bytes,
-                                     libver='latest')
+                                     libver='latest', 
+                                     w0=0.1,
+                                     n_cache_chunks=int(chunk_cache_mem_size_bytes/desired_chunk_size_bytes)
+                                     )
         self.i = 0
         self.is_swmr_hdf_version = h5py.version.hdf5_version_tuple >= (1, 9, 178)
+        self.compression = compression
 
     def set(self, key, dict_obj):
         for k, v in dict_obj.items():
@@ -48,8 +53,8 @@ class HDF5DataStore(DataStore):
                 if self.is_swmr_hdf_version:
                     d.flush()
             else:
-                self.f.create_dataset(key, data=obj[None, ...], compression="lzf", maxshape=(None, *obj.shape),
-                                      chunks=self._get_chunk_size(obj))
+                self.f.create_dataset(key, data=obj[None, ...], compression=self.compression,
+                        maxshape=(None, *obj.shape), chunks=self._get_chunk_size(obj))
         else:
             self.f.create_dataset("{}/{}".format(key, self.i), data=obj)
             self.i += 1
