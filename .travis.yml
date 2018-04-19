@@ -4,6 +4,7 @@ python:
   - "3.5"
   - "3.6"
 install:
+  - pip install --no-binary=h5py h5py
   - pip install -r requirements.txt
   - pip install -r requirements.redis.txt
   - pip install .
