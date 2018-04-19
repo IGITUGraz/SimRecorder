@@ -31,8 +31,8 @@ class TestDatastores(unittest.TestCase):
         for i in range(self.n_arrays):
             array = self.arrays[i]
             recorder.record(self.key, array)
-            if i == 0:
-                hdf5_datastore.enable_swmr()
+            # if i == 0:
+            #     hdf5_datastore.enable_swmr()
         recorder.close()
         ## END WRITE
 
