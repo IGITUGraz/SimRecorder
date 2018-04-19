@@ -1,4 +1,0 @@
-# Start hdf5 dependencies
-h5py
-h5py_cache
-# End hdf5 dependencies

@@ -4,7 +4,7 @@ import time
 
 import numpy as np
 
-from simrecorder import Recorder, RedisDataStore, Serialization
+from simrecorder import Recorder, ZarrDataStore
 
 
 def get_size(start_path):
@@ -33,28 +33,26 @@ class Timer:
 
 def main():
     read_only = False
-
-    data_dir = os.path.expanduser('~/output/tmp/redis-test')
-    os.makedirs(data_dir, exist_ok=True)
-    key = 'train.what'
+    data_dir = os.path.expanduser('~/output/tmp/zarr-test')
+    file_pth = os.path.join(data_dir, 'data.mdb')
+    key = 'train/what'
     bs = 10
     sts = 500 * 20
     ns = 200
     n_arrays = 100
-    # serialization = Serialization.PYARROW
-    serialization = Serialization.PICKLE
+    chunk_size_mb = 0.1
 
     if not read_only:
         arrays = np.random.rand(n_arrays, bs, sts, ns)
 
-        if os.path.exists(data_dir):
-            print("Removing existing dir")
-            shutil.rmtree(data_dir)
         os.makedirs(data_dir, exist_ok=True)
+        if os.path.exists(file_pth):
+            print("Removing existing dir")
+            shutil.rmtree(file_pth)
 
         ## WRITE
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=data_dir, serialization=serialization)
-        recorder = Recorder(redis_datastore)
+        zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024**2)
+        recorder = Recorder(zarr_datastore)
 
         with Timer() as wt:
             write_times = []
@@ -69,21 +67,31 @@ def main():
         print("Total write time was %.2fs" % wt.difftime)
         ## END WRITE
 
-        print("Dir size after write is %d MiB" % (int(get_size(data_dir)) / 1024 / 1024))
+        print("Dir size after write is %d MiB" % (int(get_size(file_pth)) / 1024 / 1024))
 
     ## READ
-    redis_datastore = RedisDataStore(server_host='localhost', data_directory=data_dir, serialization=serialization)
-    recorder = Recorder(redis_datastore)
+    zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024**2)
+    recorder = Recorder(zarr_datastore)
 
     with Timer() as rt:
         l = recorder.get_all(key)
     print("Reading took %.2fs" % rt.difftime)
 
+    read_times = []
+    for i in range(20):
+        b = np.random.randint(bs)
+        st = np.random.randint(sts)
+        with Timer() as rrt:
+            ll = np.array(l[:(n_arrays // 2), b, st, :])
+        print("Into sub-array took %.4fs" % rrt.difftime)
+        read_times.append(rrt.difftime)
+    print("Into sub-array mean readtime was %.4fs (+/- %.4f)" % (np.mean(read_times), np.std(read_times)))
+
     with Timer() as rrt:
         l = np.array(l)
-    print("Into array took %.2f" % rrt.difftime)
+    print("Into array (Total read time) was %.2fs" % rrt.difftime)
 
-    print("Mean is", np.mean(l), l.shape)
+    print("Data mean is", np.mean(l), l.shape)
 
     recorder.close()
     ## END READ

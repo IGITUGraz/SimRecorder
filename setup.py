@@ -6,7 +6,7 @@ import re
 from setuptools import setup
 
 __author__ = "Anand Subramoney"
-__version__ = "1.6.5"
+__version__ = "1.7.0"
 
 
 def get_requirements(filename):
@@ -25,7 +25,7 @@ def get_requirements(filename):
     return requirements, dependency_links
 
 
-requirements, dependency_links = get_requirements('requirements.hdf5.txt')
+requirements, dependency_links = get_requirements('requirements.txt')
 
 setup(
     name="SimRecorder",
