@@ -44,14 +44,16 @@ def main():
         hdf5_datastore = HDF5DataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024 ** 2)
         recorder = Recorder(hdf5_datastore)
 
-        for i in range(n_arrays):
-            array = arrays[i]
-            with Timer() as st:
-                recorder.record(key, array)
-            if i == 0:
-                hdf5_datastore.enable_swmr()
-            print("%d: Storing took %.2fs" % (i, st.difftime))
-        recorder.close()
+        with Timer() as wt:
+            for i in range(n_arrays):
+                array = arrays[i]
+                with Timer() as st:
+                    recorder.record(key, array)
+                if i == 0:
+                    hdf5_datastore.enable_swmr()
+                print("%d: Storing took %.2fs" % (i, st.difftime))
+            recorder.close()
+        print("Writing took %.2fs" % wt.difftime)
         ## END WRITE
 
         print("File size after write is %d MiB" % (int(os.path.getsize(file_pth)) / 1024 / 1024))

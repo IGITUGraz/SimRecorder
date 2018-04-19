@@ -22,9 +22,9 @@ class Timer:
 
 
 def main():
-    n_arrays = 10
+    n_arrays = 100
 
-    arrays = np.random.rand(n_arrays, 10, 500, 20, 600)
+    arrays = np.random.rand(n_arrays, 10, 500 * 20, 200)
 
     data_dir = os.path.expanduser('~/output/tmp/redis-test')
     os.makedirs(data_dir, exist_ok=True)
