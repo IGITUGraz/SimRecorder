@@ -6,5 +6,6 @@ python:
 install:
   - pip install -r requirements.txt
   - pip install -r requirements.redis.txt
+  - pip install .
 script:
   - python tests/test_datastores.py
