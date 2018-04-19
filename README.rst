@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/IGITUGraz/SimRecorder.svg?branch=master
+    :target: https://travis-ci.org/IGITUGraz/SimRecorder
+    
 SimRecorder
 ===========
 
