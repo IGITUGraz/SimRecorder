@@ -118,7 +118,7 @@ class HDF5DataStore(DataStore):
         This should be done only after all datasets have been created. You cannot add new groups after this is done.
         :return:
         """
-        assert self.is_swmr_hdf_version, "SWMR requires HDF5 version >= 1.9.178 "
+        assert self.is_swmr_hdf_version, "SWMR requires HDF5 version >= 1.9.178 but is %s" % h5py.version.hdf5_version_tuple
         "If you have libhdf5 version >= 1.10 but get this error, try installing h5py from source"
         "See: http://docs.h5py.org/en/latest/build.html#source-installation"
         self.f.swmr_mode = True
