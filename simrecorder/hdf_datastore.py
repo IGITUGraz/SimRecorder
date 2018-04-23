@@ -1,7 +1,5 @@
 import os
 
-import h5py
-import h5py_cache
 import numpy as np
 
 from simrecorder.datastore import DataStore
@@ -14,8 +12,8 @@ class HDF5DataStore(DataStore):
 
     def __init__(self,
                  data_file_pth,
-                 chunk_cache_mem_size_bytes=20 * 1024**3,
-                 desired_chunk_size_bytes=0.1 * 1024**2,
+                 chunk_cache_mem_size_bytes=20 * 1024 ** 3,
+                 desired_chunk_size_bytes=0.1 * 1024 ** 2,
                  compression='lzf'):
         """
 
@@ -24,6 +22,11 @@ class HDF5DataStore(DataStore):
         :param desired_chunk_size_bytes: Chunk size for individual chunks. h5py docs recommends keeping this between
             10 KiB and 1 MiB. Default is 0.1 MiB. Pass in -1 to switch to h5py automagic chunk size.
         """
+        import h5py
+        import h5py_cache
+
+        self.h5py = h5py
+
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
         if not os.path.exists(data_file_pth):
             self.f = h5py.File(data_file_pth, 'w', libver='latest')
@@ -53,7 +56,7 @@ class HDF5DataStore(DataStore):
         if isinstance(obj, np.ndarray):
             d = self.f.get(key)
             if d is not None:
-                assert isinstance(d, h5py.Dataset)
+                assert isinstance(d, self.h5py.Dataset)
                 # https://stackoverflow.com/a/25656175
                 d.resize(d.shape[0] + 1, axis=0)
                 # d[-1:, ...] = obj
@@ -79,7 +82,7 @@ class HDF5DataStore(DataStore):
         :return:
         """
         ## Makes sure chunk size is always 1MB!
-        desired_chunk_size_bytes = self.desired_chunk_size_bytes    # 8K # 1024**2  # 1MB
+        desired_chunk_size_bytes = self.desired_chunk_size_bytes  # 8K # 1024**2  # 1MB
         if desired_chunk_size_bytes <= 0:
             # Switch to h5py's automagic chunk size calculation
             return True
@@ -107,7 +110,7 @@ class HDF5DataStore(DataStore):
     def get_all(self, key):
         d = self.f.get(key)
         if d is not None:
-            if isinstance(d, h5py.Dataset):
+            if isinstance(d, self.h5py.Dataset):
                 return d
             else:
                 return list(map(lambda x: x[1], sorted(d.items(), key=lambda x: int(x[0]))))
@@ -120,7 +123,7 @@ class HDF5DataStore(DataStore):
         This should be done only after all datasets have been created. You cannot add new groups after this is done.
         :return:
         """
-        assert self.is_swmr_hdf_version, "SWMR requires HDF5 version >= 1.9.178 but is %s" % h5py.version.hdf5_version_tuple
+        assert self.is_swmr_hdf_version, "SWMR requires HDF5 version >= 1.9.178 but is %s" % self.h5py.version.hdf5_version_tuple
         "If you have libhdf5 version >= 1.10 but get this error, try installing h5py from source"
         "See: http://docs.h5py.org/en/latest/build.html#source-installation"
         self.f.swmr_mode = True

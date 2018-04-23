@@ -1,6 +1,3 @@
-import redis
-from rediscontroller import is_redis_running, start_redis, stop_redis
-
 from simrecorder.datastore import DataStore
 from simrecorder.serialization import Serialization, SerializationMixin
 
@@ -18,6 +15,7 @@ class RedisDataStore(DataStore, SerializationMixin):
                  serialization=Serialization.PICKLE,
                  use_multiprocess_deserialization=False,
                  use_compression=True):
+
         self.server_host = server_host
         self.data_directory = data_directory
         self.rj = None
@@ -44,13 +42,15 @@ class RedisDataStore(DataStore, SerializationMixin):
             use_compression=use_compression)
 
     def connect(self):
+        import redis
+        from rediscontroller import is_redis_running, start_redis
         if is_redis_running():
             raise RuntimeError(
                 "Redis is already running (maybe from a previous experiment?). Did you forget to change the port?")
 
         start_redis(data_directory=self.data_directory)
 
-        self.rj = redis.StrictRedis(host=self.server_host, port=REDIS_PORT)    # , decode_responses=True)
+        self.rj = redis.StrictRedis(host=self.server_host, port=REDIS_PORT)  # , decode_responses=True)
         self.set('config', self.config)
         return self
 
@@ -73,4 +73,5 @@ class RedisDataStore(DataStore, SerializationMixin):
             return self._deserialize_list(results)
 
     def close(self):
+        from rediscontroller import stop_redis
         stop_redis(redis_host=self.server_host)

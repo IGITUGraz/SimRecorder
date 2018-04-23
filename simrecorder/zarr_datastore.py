@@ -1,14 +1,8 @@
 import os
 
 import numpy as np
-import zarr
-from numcodecs import Blosc
 
 from simrecorder.datastore import DataStore
-
-
-# import numcodecs
-# numcodecs.blosc.set_nthreads(16)
 
 
 class ZarrDataStore(DataStore):
@@ -16,14 +10,19 @@ class ZarrDataStore(DataStore):
     This is a zarr datastore. Uses lmdb underneath to store the data.
     """
 
-    def __init__(self, data_dir_pth, desired_chunk_size_bytes=1. * 1024**2):
+    def __init__(self, data_dir_pth, desired_chunk_size_bytes=1. * 1024 ** 2):
         """
         :param data_dir_pth: Path to the zarr lmdb file
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
         """
 
+        import zarr
+        from numcodecs import Blosc
+
+        self.zarr = zarr
+
         self.store = zarr.LMDBStore(data_dir_pth)
-        self.compressor = Blosc(cname='lz4', clevel=9)    # , shuffle=Blosc.BITSHUFFLE)
+        self.compressor = Blosc(cname='lz4', clevel=9)  # , shuffle=Blosc.BITSHUFFLE)
 
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
 
@@ -48,7 +47,7 @@ class ZarrDataStore(DataStore):
         if isinstance(obj, np.ndarray):
             d = self.f.get(key)
             if d is not None:
-                assert isinstance(d, zarr.core.Array)
+                assert isinstance(d, self.zarr.core.Array)
                 # https://stackoverflow.com/a/25656175
                 d.resize(d.shape[0] + 1, *d.shape[1:])
                 d[-1, ...] = obj
@@ -96,7 +95,7 @@ class ZarrDataStore(DataStore):
     def get_all(self, key):
         d = self.f.get(key)
         if d is not None:
-            if isinstance(d, zarr.core.Array):
+            if isinstance(d, self.zarr.core.Array):
                 return d
             else:
                 return list(map(lambda x: x[1], sorted(d.items(), key=lambda x: int(x[0]))))
