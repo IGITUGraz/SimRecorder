@@ -1,34 +1,9 @@
 import os
 import shutil
-import time
 
 import numpy as np
 
 from simrecorder import Recorder, ZarrDataStore
-
-
-def get_size(start_path):
-    total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            total_size += os.path.getsize(fp)
-    return total_size
-
-
-class Timer:
-    def __init__(self):
-        self._startime = None
-        self._endtime = None
-        self.difftime = None
-
-    def __enter__(self):
-        self._startime = time.time()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._endtime = time.time()
-        self.difftime = self._endtime - self._startime
 
 
 def main():
@@ -51,7 +26,7 @@ def main():
             shutil.rmtree(file_pth)
 
         ## WRITE
-        zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024**2)
+        zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024 ** 2)
         recorder = Recorder(zarr_datastore)
 
         with Timer() as wt:
@@ -70,7 +45,7 @@ def main():
         print("Dir size after write is %d MiB" % (int(get_size(file_pth)) / 1024 / 1024))
 
     ## READ
-    zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024**2)
+    zarr_datastore = ZarrDataStore(file_pth, desired_chunk_size_bytes=chunk_size_mb * 1024 ** 2)
     recorder = Recorder(zarr_datastore)
 
     with Timer() as rt:

@@ -1,5 +1,3 @@
-import json
-
 import redis
 from rediscontroller import is_redis_running, start_redis, stop_redis
 
@@ -65,13 +63,14 @@ class RedisDataStore(DataStore, SerializationMixin):
         self.set('config', self.config)
         return self
 
-    def set(self, key, dict_obj):
-        self.rj.set(key, json.dumps(dict_obj))
+    def set(self, key, value):
+        serialized_obj = self._compress(self._serialize(value))
+        self.rj.set(key, serialized_obj)
 
     def get(self, key):
         val = self.rj.get(key)
         if val is not None:
-            return json.loads(val)
+            return self._deserialize(self._decompress(val))
 
     def append(self, key, obj):
         serialized_obj = self._compress(self._serialize(obj))

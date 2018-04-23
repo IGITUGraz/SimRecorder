@@ -9,6 +9,9 @@ Serialization = Enum('Serialization', ['PICKLE', 'PYARROW'])
 
 
 class SerializationMixin:
+    """
+    Mixin to do serialization for a datastore if required. Supports ability to do serialization in a separate process.
+    """
     ## Private methods
     @staticmethod
     def _pickle_serialize(obj):

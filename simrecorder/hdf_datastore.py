@@ -40,9 +40,12 @@ class HDF5DataStore(DataStore):
         self.is_swmr_hdf_version = h5py.version.hdf5_version_tuple >= (1, 9, 178)
         self.compression = compression
 
-    def set(self, key, dict_obj):
-        for k, v in dict_obj.items():
-            self.f.create_dataset("{}/{}".format(key, k), data=v)
+    def set(self, key, value):
+        d = self.f.get(key)
+        if d is not None:
+            del self.f[key]
+
+        self.f.create_dataset(key, data=value)
 
     def get(self, key):
         return self.f.get(key)

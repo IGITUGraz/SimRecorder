@@ -2,22 +2,23 @@ import os
 
 import numpy as np
 import zarr
-import numcodecs
 from numcodecs import Blosc
 
 from simrecorder.datastore import DataStore
 
-numcodecs.blosc.set_nthreads(16)
+
+# import numcodecs
+# numcodecs.blosc.set_nthreads(16)
 
 
 class ZarrDataStore(DataStore):
     """
-    This is a zarr datastore.
+    This is a zarr datastore. Uses lmdb underneath to store the data.
     """
 
-    def __init__(self, data_dir_pth, desired_chunk_size_bytes=0.1 * 1024**2):
+    def __init__(self, data_dir_pth, desired_chunk_size_bytes=1. * 1024**2):
         """
-        :param data_dir_pth: Path to the hdf5 file
+        :param data_dir_pth: Path to the zarr lmdb file
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
         """
 
@@ -33,9 +34,12 @@ class ZarrDataStore(DataStore):
 
         self.i = 0
 
-    def set(self, key, dict_obj):
-        for k, v in dict_obj.items():
-            self.f.create_dataset("{}/{}".format(key, k), data=v)
+    def set(self, key, value):
+        d = self.f.get(key)
+        if d is None:
+            self.f.create_dataset(key, data=value)
+        else:
+            self.f.create_dataset(key, data=value, overwrite=True)
 
     def get(self, key):
         return self.f.get(key)
