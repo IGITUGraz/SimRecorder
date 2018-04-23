@@ -18,11 +18,6 @@ class RedisDataStore(DataStore, SerializationMixin):
                  serialization=Serialization.PICKLE,
                  use_multiprocess_deserialization=False,
                  use_compression=True):
-        # , custom_json_encoder_cls=None, custom_json_decoder_cls=None):
-        # Either both are None or both are not
-        # assert not ((custom_json_encoder_cls is None) ^ (custom_json_decoder_cls is None))
-        # self.custom_json_encoder_cls = custom_json_encoder_cls
-        # self.custom_json_decoder_cls = custom_json_decoder_cls
         self.server_host = server_host
         self.data_directory = data_directory
         self.rj = None
@@ -55,10 +50,6 @@ class RedisDataStore(DataStore, SerializationMixin):
 
         start_redis(data_directory=self.data_directory)
 
-        # if self.custom_json_encoder_cls is not None and self.custom_json_decoder_cls is not None:
-        #     self.rj = Client(host=self.server_host, port=REDIS_PORT, encoder=self.custom_json_encoder_cls(),
-        #                      decoder=self.custom_json_decoder_cls())  # , decode_responses=True)
-        # else:
         self.rj = redis.StrictRedis(host=self.server_host, port=REDIS_PORT)    # , decode_responses=True)
         self.set('config', self.config)
         return self

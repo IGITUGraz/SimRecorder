@@ -4,6 +4,7 @@ import os
 import numpy as np
 
 from simrecorder import Recorder, HDF5DataStore
+from tests import Timer
 
 
 def main():

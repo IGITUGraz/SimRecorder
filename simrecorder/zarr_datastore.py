@@ -62,13 +62,13 @@ class ZarrDataStore(DataStore):
 
     def _get_chunk_size(self, obj):
         """
-        Tries to optimize the chunk size (assuming 32-bit floats used) so that the chunk size is close to 1MB. The last
-        dimension size is maintained without change.
+        Tries to optimize the chunk size (assuming 32-bit floats used) so that the chunk size is close to
+        `desired_chunk_size_bytes`. The last dimension size is maintained without change.
         :param obj:
         :return:
         """
-        ## Makes sure chunk size is always 1MB!
-        desired_chunk_size_bytes = self.desired_chunk_size_bytes    # 8K # 1024**2  # 1MB
+        ## Makes sure chunk size is always `desired_chunk_size_bytes`!
+        desired_chunk_size_bytes = self.desired_chunk_size_bytes
         if desired_chunk_size_bytes <= 0:
             # Switch to h5py's automagic chunk size calculation
             return True

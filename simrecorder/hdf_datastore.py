@@ -28,7 +28,6 @@ class HDF5DataStore(DataStore):
         if not os.path.exists(data_file_pth):
             self.f = h5py.File(data_file_pth, 'w', libver='latest')
         else:
-            # self.f = h5py.File(data_file_pth, 'r', libver='latest')
             self.f = h5py_cache.File(
                 data_file_pth,
                 'r',

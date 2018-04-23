@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 
 from simrecorder import Recorder, ZarrDataStore
+from tests import Timer, get_size
 
 
 def main():
