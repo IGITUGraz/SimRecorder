@@ -22,7 +22,7 @@ class ZarrDataStore(DataStore):
         self.zarr = zarr
 
         self.store = zarr.LMDBStore(data_dir_pth)
-        self.compressor = Blosc(cname='lz4', clevel=9)  # , shuffle=Blosc.BITSHUFFLE)
+        self.compressor = Blosc(cname='blosclz', clevel=9, shuffle=Blosc.BITSHUFFLE)
 
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
 
