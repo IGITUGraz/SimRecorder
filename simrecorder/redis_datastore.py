@@ -85,9 +85,9 @@ class RedisDataStore(DataStore, SerializationMixin):
         server_config_data = self.rj.get('server_config')
 
         if client_config_data is not None:
-            client_config_dict = json.loads(client_config_data)
+            client_config_dict = json.loads(client_config_data.decode('utf-8'))
             client_config_dict['serialization'] = getattr(Serialization, client_config_dict['serialization'])
-            server_config_dict = json.loads(server_config_data)
+            server_config_dict = json.loads(server_config_data.decode('utf-8'))
         else:
             raise RuntimeError("The Redis server at host {} and port {} has not been"
                                " appropriately initialized. The client and server"
@@ -177,8 +177,8 @@ class RedisServer:
 
         existing_client_config = self._rj.get('client_config')
         if existing_client_config is None:
-            self._rj.set('client_config', json.dumps(self.client_config, protocol=0))
-            self._rj.set('server_config', json.dumps(self.server_config, protocol=0))
+            self._rj.set('client_config', json.dumps(self.client_config))
+            self._rj.set('server_config', json.dumps(self.server_config))
         else:
             logger.warn('Found existing database in directory %s, ignoring specified'
                         ' client and server configuration', self.data_directory)
