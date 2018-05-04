@@ -125,6 +125,7 @@ class TestDatastores(unittest.TestCase):
             recorder.close()
             ## END WRITE
 
+        with RedisServer(data_directory=self.data_dir):
             ## READ
             redis_datastore = RedisDataStore(server_host='localhost')
             recorder = Recorder(redis_datastore)
@@ -147,6 +148,7 @@ class TestDatastores(unittest.TestCase):
             recorder.close()
             ## END WRITE
 
+        with RedisServer(data_directory=self.data_dir):
             ## READ
             redis_datastore = RedisDataStore(server_host='localhost')
             recorder = Recorder(redis_datastore)

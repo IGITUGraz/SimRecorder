@@ -1,6 +1,6 @@
 from simrecorder.datastore import DataStore
 from simrecorder.serialization import Serialization, SerializationMixin
-import pickle
+import json
 
 import logging
 
@@ -30,7 +30,7 @@ class RedisDataStore(DataStore, SerializationMixin):
 
         import redis
         self.rj = redis.StrictRedis(host=self.server_host, port=self.redis_port)  # , decode_responses=True)
-        config_dict = self.get_config()['client']
+        config_dict = self._get_config()['client']
 
         serialization = config_dict['serialization']
         use_multiprocess_deserialization = config_dict['use_multiprocess_deserialization']
@@ -75,19 +75,19 @@ class RedisDataStore(DataStore, SerializationMixin):
             results = self.rj.lrange(key, 0, -1)
             return self._deserialize_list(results)
 
-    def get_config(self):
+    def _get_config(self):
         """
         Get's the client and server configuration from the database
-        The config is stored using uncompressed pickle so that clients can read the
+        The config is stored using uncompressed json so that clients can read the
         config of any server independent of server configuration.
         """
         client_config_data = self.rj.get('client_config')
         server_config_data = self.rj.get('server_config')
 
         if client_config_data is not None:
-            client_config_dict = pickle.loads(client_config_data)
+            client_config_dict = json.loads(client_config_data)
             client_config_dict['serialization'] = getattr(Serialization, client_config_dict['serialization'])
-            server_config_dict = pickle.loads(server_config_data)
+            server_config_dict = json.loads(server_config_data)
         else:
             raise RuntimeError("The Redis server at host {} and port {} has not been"
                                " appropriately initialized. The client and server"
@@ -146,18 +146,17 @@ class RedisServer:
             "The data_directory: {} is not a valid directory".format(data_directory)
 
         self.data_directory = data_directory
-        self._redis_port = redis_port
         self.config_file_path = config_file_path
-        self.redis_port = None  # only assigned once the server is started
-        self.rj = None
+        self._redis_port_arg = redis_port
+        self._redis_port_value = None  # only assigned once the server is started
+        self._rj = None
 
         self.server_config = dict(
             data_directory=data_directory,
-            redis_port=redis_port,
             config_file_path=config_file_path)
 
         self.client_config = dict(
-            serialization=str(serialization.name),
+            serialization=serialization.name,
             use_multiprocess_deserialization=use_multiprocess_deserialization,
             use_compression=use_compression)
 
@@ -167,33 +166,43 @@ class RedisServer:
         """
         import redis
         from rediscontroller import is_redis_running, start_redis
-        if not isinstance(self._redis_port, str):
-            if is_redis_running(redis_port=self._redis_port):
+        if not isinstance(self._redis_port_arg, str):
+            if is_redis_running(redis_port=self._redis_port_arg):
                 raise RuntimeError(
                     "Redis is already running at port {} (maybe from a previous experiment?). Did "
-                    "you forget to change the port?".format(self._redis_port))
+                    "you forget to change the port?".format(self._redis_port_arg))
 
-        self.redis_port = start_redis(data_directory=self.data_directory, redis_port=self._redis_port)
-        self.rj = redis.StrictRedis(host='localhost', port=self.redis_port)  # , decode_responses=True)
-        existing_client_config = self.rj.get('client_config')
-        self.rj.set('server_config', pickle.dumps(self.server_config, protocol=0))
+        self._redis_port_value = start_redis(data_directory=self.data_directory, redis_port=self._redis_port_arg)
+        self._rj = redis.StrictRedis(host='localhost', port=self._redis_port_value)  # , decode_responses=True)
+
+        existing_client_config = self._rj.get('client_config')
         if existing_client_config is None:
-            self.rj.set('client_config', pickle.dumps(self.client_config, protocol=0))
+            self._rj.set('client_config', json.dumps(self.client_config, protocol=0))
+            self._rj.set('server_config', json.dumps(self.server_config, protocol=0))
         else:
             logger.warn('Found existing database in directory %s, ignoring specified'
-                        ' client configuration', self.data_directory)
+                        ' client and server configuration', self.data_directory)
 
     def stop(self):
         """
         Stop the redis server
         """
         from rediscontroller import stop_redis
-        stop_redis(redis_port=self.redis_port)
-        self.redis_port = None
-        self.rj = None
+        stop_redis(redis_host='localhost', redis_port=self._redis_port_value)
+        self._redis_port_value = None
+        self._rj = None
 
-    def get_port(self):
-        return self.redis_port
+    @property
+    def port(self):
+        """
+        This returns the port on which the server is active. Raises RuntimeError if the
+        server hasn't been started yet. Can be used to retrieve the port if the server
+        is started on a random port.
+        """
+        if self._redis_port_value is None:
+            raise RuntimeError('The Redis server has not been started and therefore has no'
+                               ' port value assigned to it')
+        return self._redis_port_value
 
     def __enter__(self):
         self.start()
