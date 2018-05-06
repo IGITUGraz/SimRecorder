@@ -3,7 +3,7 @@ import shutil
 
 import numpy as np
 
-from simrecorder import Recorder, RedisDataStore, Serialization
+from simrecorder import Recorder, RedisDataStore, RedisServer, Serialization
 from tests import Timer, get_size
 
 
@@ -28,28 +28,30 @@ def main():
             shutil.rmtree(data_dir)
         os.makedirs(data_dir, exist_ok=True)
 
-        ## WRITE
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=data_dir, serialization=serialization)
-        recorder = Recorder(redis_datastore)
+        with RedisServer(data_directory=data_dir, serialization=serialization):
+            ## WRITE
+            redis_datastore = RedisDataStore(server_host='localhost')
+            recorder = Recorder(redis_datastore)
 
-        with Timer() as wt:
-            write_times = []
-            for i in range(n_arrays):
-                array = arrays[i]
-                with Timer() as st:
-                    recorder.record(key, array)
-                print("%d: Storing took %.2fs" % (i, st.difftime))
-                write_times.append(st.difftime)
-            print("Mean write time was %.4fs (+/- %.4f)" % (np.mean(write_times), np.std(write_times)))
-            recorder.close()
-        print("Total write time was %.2fs" % wt.difftime)
-        ## END WRITE
+            with Timer() as wt:
+                write_times = []
+                for i in range(n_arrays):
+                    array = arrays[i]
+                    with Timer() as st:
+                        recorder.record(key, array)
+                    print("%d: Storing took %.2fs" % (i, st.difftime))
+                    write_times.append(st.difftime)
+                print("Mean write time was %.4fs (+/- %.4f)" % (np.mean(write_times), np.std(write_times)))
+                recorder.close()
+            print("Total write time was %.2fs" % wt.difftime)
+            ## END WRITE
 
         print("Dir size after write is %d MiB" % (int(get_size(data_dir)) / 1024 / 1024))
 
     ## READ
-    redis_datastore = RedisDataStore(server_host='localhost', data_directory=data_dir, serialization=serialization)
-    recorder = Recorder(redis_datastore)
+    with RedisServer(data_directory=data_dir, serialization=serialization):
+        redis_datastore = RedisDataStore(server_host='localhost', data_directory=data_dir, serialization=serialization)
+        recorder = Recorder(redis_datastore)
 
     with Timer() as rt:
         l = recorder.get_all(key)

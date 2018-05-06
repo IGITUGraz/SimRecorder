@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from simrecorder import (HDF5DataStore, InMemoryDataStore, Recorder,
-                         RedisDataStore, ZarrDataStore)
+                         RedisDataStore, RedisServer, ZarrDataStore)
 
 
 class TestDatastores(unittest.TestCase):
@@ -114,47 +114,51 @@ class TestDatastores(unittest.TestCase):
         ## END READ
 
     def test_redisdatastore_list(self):
-        ## WRITE
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=self.data_dir)
-        recorder = Recorder(redis_datastore)
+        with RedisServer(data_directory=self.data_dir):
+            ## WRITE
+            redis_datastore = RedisDataStore(server_host='localhost')
+            recorder = Recorder(redis_datastore)
 
-        for i in range(self.n_arrays):
-            array = self.arrays[i]
-            recorder.record(self.key, array)
-        recorder.close()
-        ## END WRITE
+            for i in range(self.n_arrays):
+                array = self.arrays[i]
+                recorder.record(self.key, array)
+            recorder.close()
+            ## END WRITE
 
-        ## READ
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=self.data_dir)
-        recorder = Recorder(redis_datastore)
+        with RedisServer(data_directory=self.data_dir):
+            ## READ
+            redis_datastore = RedisDataStore(server_host='localhost')
+            recorder = Recorder(redis_datastore)
 
-        l = recorder.get_all(self.key)
-        l = np.array(l)
-        self.assertTrue((self.arrays == l).all())
+            l = recorder.get_all(self.key)
+            l = np.array(l)
+            self.assertTrue((self.arrays == l).all())
 
-        recorder.close()
-        ## END READ
+            recorder.close()
+            ## END READ
 
     def test_redisdatastore_single_value(self):
-        ## WRITE
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=self.data_dir)
-        recorder = Recorder(redis_datastore)
+        with RedisServer(data_directory=self.data_dir):
+            ## WRITE
+            redis_datastore = RedisDataStore(server_host='localhost')
+            recorder = Recorder(redis_datastore)
 
-        recorder.set(self.key, self.val1)
-        recorder.set(self.key, self.val)
-        recorder.close()
-        ## END WRITE
+            recorder.set(self.key, self.val1)
+            recorder.set(self.key, self.val)
+            recorder.close()
+            ## END WRITE
 
-        ## READ
-        redis_datastore = RedisDataStore(server_host='localhost', data_directory=self.data_dir)
-        recorder = Recorder(redis_datastore)
+        with RedisServer(data_directory=self.data_dir):
+            ## READ
+            redis_datastore = RedisDataStore(server_host='localhost')
+            recorder = Recorder(redis_datastore)
 
-        l = recorder.get(self.key)
-        l = np.array(l)
-        self.assertTrue((self.val == l).all())
+            l = recorder.get(self.key)
+            l = np.array(l)
+            self.assertTrue((self.val == l).all())
 
-        recorder.close()
-        ## END READ
+            recorder.close()
+            ## END READ
 
     def test_zarrdatastore_list(self):
         ## WRITE
