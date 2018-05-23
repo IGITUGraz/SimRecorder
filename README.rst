@@ -173,6 +173,11 @@ Backends
 * For distributed simulations running across multiple nodes, the redis backend should be used.
 * Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) NumPy arrays
 
+Supercomputers
+++++++++++++++
+
+When using on supercomputers be advised that you may need to compile some dependencies from source. For example ``Blosc``, because of missing CPU optimizations.
+
 Performance benchmarks
 ++++++++++++++++++++++
 
