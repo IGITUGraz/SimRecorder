@@ -173,10 +173,16 @@ Backends
 * For distributed simulations running across multiple nodes, the redis backend should be used.
 * Redis backend is extremely fast for both reading and writing, as long as you're not storing large (>20MB) NumPy arrays
 
-Supercomputers
-++++++++++++++
+Architectures without SSE2 and AVX operations
++++++++++++++++++++++++++++++++++++++++++++++
 
-When using on supercomputers be advised that you may need to compile some dependencies from source. For example ``Blosc``, because of missing CPU optimizations.
+When using on **x86** architectures where SSE2 and AVX CPU operations are not available, you should install
+`numcodecs <https://github.com/zarr-developers/numcodecs>`_ `from source <http://numcodecs.readthedocs.io/en/stable/>`_
+since ``Blosc`` by default depends on these CPU optimizations.
+
+For **PPC** architectures, install numcodecs from `this fork <https://github.com/anandtrex/numcodecs>`_
+
+
 
 Performance benchmarks
 ++++++++++++++++++++++
@@ -188,7 +194,7 @@ For one single run, on a NFS disk, Intel Xeon machine, with default parameters, 
 ====================  ====================  ===================  ==========================  ===================  ==================
    Backend            Total write time (s)  Mean write time (s)  Slicing mean read time (s)  Total read time (s)  Size on disk (GB)
 --------------------  --------------------  -------------------  --------------------------  -------------------  ------------------
-Zarr                  184.51                1.8236               0.0050                      25.72                14
+Zarr (lmdb + blosc)   184.51                1.8236               0.0050                      25.72                14
 HDF5                  140.69                1.3530               0.1167                      145.30               15
 redis (PyArrow) [1]_  267.82                1.3794               NA                          68.00                48
 redis (pickle) [1]_   305.24                1.7668               NA                          66.75                40 
