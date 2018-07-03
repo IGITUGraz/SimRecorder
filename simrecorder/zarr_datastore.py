@@ -38,10 +38,10 @@ class ZarrDataStore(DataStore):
             from numcodecs import Blosc
             self.compressor = Blosc(cname='blosclz', clevel=9, shuffle=Blosc.BITSHUFFLE)
         elif compression_type == CompressionType.LZMA:
-            import lzma
-            lzma_filters = [dict(id=lzma.FILTER_DELTA, dist=4), dict(id=lzma.FILTER_LZMA2, preset=1)]
+            # import lzma
+            # lzma_filters = [dict(id=lzma.FILTER_DELTA, dist=4), dict(id=lzma.FILTER_LZMA2, preset=1)]
             from numcodecs import LZMA
-            self.compressor = LZMA(filters=lzma_filters)
+            self.compressor = LZMA()
 
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
 

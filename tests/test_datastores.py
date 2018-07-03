@@ -163,7 +163,7 @@ class TestDatastores(unittest.TestCase):
     def test_zarrdatastore_list(self):
         ## WRITE
         assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))
-        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
         recorder = Recorder(zarr_datastore)
 
         for i in range(self.n_arrays):
@@ -195,7 +195,7 @@ class TestDatastores(unittest.TestCase):
         ## END WRITE
 
         ## READ
-        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
         recorder = Recorder(zarr_datastore)
 
         l = recorder.get(self.key)
