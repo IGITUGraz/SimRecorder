@@ -1,8 +1,12 @@
 import os
+from enum import Enum
 
 import numpy as np
 
 from simrecorder.datastore import DataStore
+
+DatastoreType = Enum('DatastoreType', ['LMDB', 'DIRECTORY'])
+CompressionType = Enum('CompressionType', ['BLOSC', 'LZMA'])
 
 
 class ZarrDataStore(DataStore):
@@ -10,19 +14,34 @@ class ZarrDataStore(DataStore):
     This is a zarr datastore. Uses lmdb underneath to store the data.
     """
 
-    def __init__(self, data_dir_pth, desired_chunk_size_bytes=1. * 1024 ** 2):
+    def __init__(self, data_dir_pth, desired_chunk_size_bytes=1. * 1024 ** 2, datastore_type=DatastoreType.LMDB, compression_type=CompressionType.BLOSC):
         """
         :param data_dir_pth: Path to the zarr lmdb file
-        self.desired_chunk_size_bytes = desired_chunk_size_bytes
+        :param desired_chunk_size_bytes: The size (in bytes) of chunk each array is split into
+        :param datastore_type: LMDB uses the lmdb database which needs to be installed on the system. If not available, use DIRECTORY type, which uses os filesystem
+        :param compression_type: BLOSC uses the blosc library through numcodecs, but requires the blosc library to be installed on the system, or have a compatible system where blosc can be automatically installed when installing numcodes. If blosc is not available, use LZMA, which uses the python built-in compression library LZMA.
         """
 
         import zarr
-        from numcodecs import Blosc
 
         self.zarr = zarr
 
-        self.store = zarr.LMDBStore(data_dir_pth)
-        self.compressor = Blosc(cname='blosclz', clevel=9, shuffle=Blosc.BITSHUFFLE)
+        self.datastore_type = datastore_type
+        if datastore_type == DatastoreType.LMDB:
+            self.store = zarr.LMDBStore(data_dir_pth)
+        elif datastore_type == DatastoreType.DIRECTORY:
+            self.store = zarr.DirectoryStore(data_dir_pth)
+        else:
+            raise RuntimeError('Unknown datastore type: {}'.format(datastore_type))
+
+        if compression_type == CompressionType.BLOSC:
+            from numcodecs import Blosc
+            self.compressor = Blosc(cname='blosclz', clevel=9, shuffle=Blosc.BITSHUFFLE)
+        elif compression_type == CompressionType.LZMA:
+            import lzma
+            lzma_filters = [dict(id=lzma.FILTER_DELTA, dist=4), dict(id=lzma.FILTER_LZMA2, preset=1)]
+            from numcodecs import LZMA
+            self.compressor = LZMA(filters=lzma_filters)
 
         self.desired_chunk_size_bytes = desired_chunk_size_bytes
 
@@ -51,7 +70,8 @@ class ZarrDataStore(DataStore):
                 # https://stackoverflow.com/a/25656175
                 d.resize(d.shape[0] + 1, *d.shape[1:])
                 d[-1, ...] = obj
-                self.store.flush()
+                if self.datastore_type == DatastoreType.LMDB:
+                    self.store.flush()
             else:
                 self.f.create_dataset(
                     key, data=obj[None, ...], compressor=self.compressor, chunks=self._get_chunk_size(obj))
@@ -101,4 +121,5 @@ class ZarrDataStore(DataStore):
                 return list(map(lambda x: x[1], sorted(d.items(), key=lambda x: int(x[0]))))
 
     def close(self):
-        self.store.close()
+        if self.datastore_type == DatastoreType.LMDB:
+            self.store.close()

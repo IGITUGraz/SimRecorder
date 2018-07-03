@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from simrecorder import (HDF5DataStore, InMemoryDataStore, Recorder,
-                         RedisDataStore, RedisServer, ZarrDataStore)
+                         RedisDataStore, RedisServer, ZarrDataStore, DatastoreType, CompressionType)
 
 
 class TestDatastores(unittest.TestCase):
@@ -173,7 +173,7 @@ class TestDatastores(unittest.TestCase):
         ## END WRITE
 
         ## READ
-        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
         recorder = Recorder(zarr_datastore)
 
         l = recorder.get_all(self.key)
@@ -186,7 +186,7 @@ class TestDatastores(unittest.TestCase):
     def test_zarrdatastore_single_value(self):
         ## WRITE
         assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))
-        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
         recorder = Recorder(zarr_datastore)
 
         recorder.set(self.key, self.val1)
