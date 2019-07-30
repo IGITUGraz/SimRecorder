@@ -183,6 +183,28 @@ class TestDatastores(unittest.TestCase):
         recorder.close()
         ## END READ
 
+    def test_zarrdatastore_list_scalar(self):
+        ## WRITE
+        assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
+        recorder = Recorder(zarr_datastore)
+
+        recorder.record(self.key, 10.)
+        recorder.record(self.key, 20.)
+        recorder.close()
+        ## END WRITE
+
+        ## READ
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
+        recorder = Recorder(zarr_datastore)
+
+        l = recorder.get_all(self.key)
+        l = np.array(l)
+        self.assertTrue((np.array([10., 20.]) == l).all())
+
+        recorder.close()
+        ## END READ
+
     def test_zarrdatastore_single_value(self):
         ## WRITE
         assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))
