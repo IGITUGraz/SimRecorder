@@ -59,7 +59,7 @@ in an appropriate ``DataStore`` object.
 
    .. code:: python
 
-       from simrecorder import Recorder, InMemoryDataStore, RedisDataStore, HDF5DataStore, ZarrDatastore
+       from simrecorder import Recorder, InMemoryDataStore, RedisDataStore, HDF5DataStore, ZarrDataStore
 
 2. Then initialize all the datastores you want (Yes, you can have more than one!). 
 
