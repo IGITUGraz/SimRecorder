@@ -160,6 +160,33 @@ class TestDatastores(unittest.TestCase):
             recorder.close()
             ## END READ
 
+    def test_zarrdatastore_object(self):
+        ## WRITE
+        assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
+        recorder = Recorder(zarr_datastore)
+
+        test_list_1 = [np.random.rand(3, 1), np.random.rand(4, 1), np.array([])]
+        test_list_2 = [np.random.rand(3, 1), np.random.rand(4, 1), np.array([])]
+        test_list = [test_list_1, test_list_2]
+
+        recorder.record(self.key, test_list_1)
+        recorder.record(self.key, test_list_2)
+        recorder.close()
+        ## END WRITE
+
+        ## READ
+        zarr_datastore = ZarrDataStore(os.path.join(self.data_dir, 'test.mdb'), datastore_type=DatastoreType.DIRECTORY, compression_type=CompressionType.LZMA)
+        recorder = Recorder(zarr_datastore)
+
+        l = recorder.get_all(self.key)
+        for j in range(len(l)):
+            for i in range(3):
+                self.assertTrue((test_list[j][i] == l[j][i]).all())
+
+        recorder.close()
+        ## END READ
+
     def test_zarrdatastore_list(self):
         ## WRITE
         assert not os.path.exists(os.path.join(self.data_dir, 'test.mdb'))

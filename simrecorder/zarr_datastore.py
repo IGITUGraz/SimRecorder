@@ -78,7 +78,10 @@ class ZarrDataStore(DataStore):
                 self.f.create_dataset(
                     key, data=obj[None, ...], compressor=self.compressor, chunks=self._get_chunk_size(obj))
         else:
-            self.f.create_dataset("{}/{}".format(key, self.i), data=obj)
+            import numcodecs
+
+            # self.f.create_dataset("{}/{}".format(key, self.i), data=obj)
+            z = self.f.array("{}/{}".format(key, self.i), obj, dtype=object, object_codec=numcodecs.Pickle())
             self.i += 1
 
     def _get_chunk_size(self, obj):
