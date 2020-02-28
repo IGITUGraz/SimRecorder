@@ -63,8 +63,8 @@ class ZarrDataStore(DataStore):
         return self.f.get(key)
 
     def append(self, key, obj):
-        if isinstance(obj, np.ndarray) or isinstance(obj, float) or isinstance(obj, int):
-            if isinstance(obj, float) or isinstance(obj, int):
+        if isinstance(obj, np.ndarray) or isinstance(obj, float) or isinstance(obj, int) or isinstance(obj, np.generic):
+            if isinstance(obj, float) or isinstance(obj, int) or isinstance(obj, np.generic):
                 obj = np.array(obj)
             d = self.f.get(key)
             if d is not None:
